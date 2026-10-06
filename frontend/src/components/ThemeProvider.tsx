@@ -15,6 +15,20 @@ export const themes: Record<string, Theme> = {
     black: {bg: "#383838", text: "#F5F5F5", card: "#2A2A2A", button: "#8C8C8C"}
 };
 
+const themeStorageKey = 'studygatchi.theme';
+
+function readSavedTheme(): Theme {
+  try {
+    const saved = window.localStorage.getItem(themeStorageKey);
+    if (saved && Object.prototype.hasOwnProperty.call(themes, saved)) {
+      return themes[saved];
+    }
+  } catch {
+    return themes.black;
+  }
+  return themes.black;
+}
+
 type ThemeContextType = {
     theme: Theme;
     setTheme: React.Dispatch<React.SetStateAction<Theme>>;
@@ -28,7 +42,7 @@ type ThemeProviderProps = {
 }
 
 export function ThemeProvider({children}: ThemeProviderProps){
-  const [theme, setTheme] = useState<Theme>(themes.black);
+  const [theme, setTheme] = useState<Theme>(readSavedTheme);
 
   useEffect(() => {
     console.log("Theme changed:", theme);
@@ -36,6 +50,14 @@ export function ThemeProvider({children}: ThemeProviderProps){
     document.documentElement.style.setProperty("--text-color", theme.text);
     document.documentElement.style.setProperty("--card-bg", theme.card);
     document.documentElement.style.setProperty("--button-bg", theme.button);
+    const name = Object.keys(themes).find((key) => themes[key] === theme);
+    if (name) {
+      try {
+        window.localStorage.setItem(themeStorageKey, name);
+      } catch {
+        return;
+      }
+    }
   }, [theme]);
   
   return (
